@@ -187,6 +187,30 @@ document.getElementById('toggleEyeButton').addEventListener('click', () => {
         controls.style.display = 'flex';
     }
 });
+        // 保存用户选择到 LocalStorage
+function saveToLocalStorage() {
+    localStorage.setItem('lifeExpectancy', document.getElementById('lifeExpectancy').value);
+    localStorage.setItem('currentAge', document.getElementById('currentAge').value);
+    localStorage.setItem('customMessage', customEndingMessage);
+}
+
+// 从 LocalStorage 加载用户选择
+function loadFromLocalStorage() {
+    const savedLifeExpectancy = localStorage.getItem('lifeExpectancy');
+    const savedCurrentAge = localStorage.getItem('currentAge');
+    const savedCustomMessage = localStorage.getItem('customMessage');
+
+    if (savedLifeExpectancy) {
+        document.getElementById('lifeExpectancy').value = savedLifeExpectancy;
+    }
+    if (savedCurrentAge) {
+        document.getElementById('currentAge').value = savedCurrentAge;
+    }
+    if (savedCustomMessage) {
+        customEndingMessage = savedCustomMessage;
+    }
+}
+
         function createGrid() {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
@@ -202,6 +226,10 @@ document.getElementById('toggleEyeButton').addEventListener('click', () => {
                 }
 if (i < currentAge) {
     cell.classList.add('passed');
+    const savedColor = localStorage.getItem('passedCellColor'); // 从 LocalStorage 获取保存的颜色
+    if (savedColor) {
+        cell.style.backgroundColor = savedColor; // 应用保存的颜色
+    }
 
     // 添加双击事件以调出颜色选择器
     cell.addEventListener('dblclick', (e) => {
@@ -219,10 +247,12 @@ if (i < currentAge) {
 
         // 当用户选择颜色时，更新所有已覆盖格子的颜色
         colorPicker.addEventListener('input', (ev) => {
-            document.querySelectorAll('.cell.passed').forEach(passedCell => {
-                passedCell.style.backgroundColor = ev.target.value;
-            });
-        });
+        document.querySelectorAll('.cell.passed').forEach(passedCell => {
+        passedCell.style.backgroundColor = ev.target.value;
+    });
+        localStorage.setItem('passedCellColor', ev.target.value); // 保存颜色到 LocalStorage
+});
+
 
         // 清理颜色选择器
         colorPicker.addEventListener('blur', () => {
@@ -259,24 +289,39 @@ if (i < currentAge) {
         });
 
         customMessageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                customEndingMessage = customMessageInput.value;
-                customMessageInput.style.display = 'none';
-                createGrid(); // 更新显示
-            }
-        });
+    if (e.key === 'Enter') {
+        customEndingMessage = customMessageInput.value;
+        customMessageInput.style.display = 'none';
+        createGrid(); // 更新显示
+        saveToLocalStorage(); // 保存数据
+    }
+});
+
 
         customMessageInput.addEventListener('blur', () => {
-            customEndingMessage = customMessageInput.value;
-            customMessageInput.style.display = 'none';
-            createGrid(); // 更新显示
-        });
+    customEndingMessage = customMessageInput.value;
+    customMessageInput.style.display = 'none';
+    createGrid(); // 更新显示
+    saveToLocalStorage(); // 保存数据
+});
+
         
-        document.getElementById('lifeExpectancy').addEventListener('change', createGrid);
-        document.getElementById('currentAge').addEventListener('input', createGrid);
+        document.getElementById('lifeExpectancy').addEventListener('change', () => {
+    createGrid();
+    saveToLocalStorage();
+});
+
+        document.getElementById('currentAge').addEventListener('input', () => {
+    createGrid();
+    saveToLocalStorage();
+});
+
         
-        // 初始创建
-        createGrid();
+        // 加载用户选择
+loadFromLocalStorage();
+// 初始创建
+createGrid();
+
     </script>
 </body>
 </html>
