@@ -178,6 +178,7 @@ document.getElementById('toggleEyeButton').addEventListener('click', () => {
             <path d="M4.5 4.5l15 15"></path>
         `;
         controls.style.display = 'none';
+        localStorage.setItem('eyeState', 'closed'); // 保存状态为闭眼
     } else {
         // 改为睁眼状态并显示 controls
         eyeIcon.innerHTML = `
@@ -185,6 +186,7 @@ document.getElementById('toggleEyeButton').addEventListener('click', () => {
             <circle cx="12" cy="12" r="3"></circle>
         `;
         controls.style.display = 'flex';
+        localStorage.setItem('eyeState', 'open'); // 保存状态为睁眼
     }
 });
         // 保存用户选择到 LocalStorage
@@ -319,6 +321,27 @@ if (i < currentAge) {
         
         // 加载用户选择
 loadFromLocalStorage();
+
+// 恢复小眼睛状态
+const savedEyeState = localStorage.getItem('eyeState');
+const eyeIcon = document.getElementById('eyeIcon');
+const controls = document.querySelector('.controls');
+if (savedEyeState === 'closed') {
+    // 设置为闭眼状态
+    eyeIcon.innerHTML = `
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <path d="M4.5 4.5l15 15"></path>
+    `;
+    controls.style.display = 'none';
+} else {
+    // 设置为睁眼状态（默认）
+    eyeIcon.innerHTML = `
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+    `;
+    controls.style.display = 'flex';
+}
+
 // 初始创建
 createGrid();
 
