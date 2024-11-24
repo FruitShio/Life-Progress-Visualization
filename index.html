@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #ffffff;
+            color: #37352f;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .controls {
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        select, input {
+            padding: 6px 12px;
+            font-size: 15px;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            background-color: white;
+            transition: all 0.2s ease;
+        }
+
+        select:hover, input:hover {
+            background-color: #f7f7f7;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #797979;
+            box-shadow: 0 0 0 2px rgba(46, 170, 220, 0.2);
+        }
+
+        input {
+            width: 70px;
+        }
+
+        .summary {
+            margin: 24px 0;
+            padding: 12px 16px;
+            background-color: #f7f7f7;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        .summary-text {
+            flex-grow: 1;
+            margin-right: 12px;
+        }
+
+        .edit-button {
+            padding: 4px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+
+        .edit-button:hover {
+            opacity: 1;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 4px;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            border: 1px solid #787878; // 调整
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+
+        .cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .cell.passed {
+            background-color: #b7b7b7;
+            border-color: #7d7d7d;
+        }
+
+        .editable {
+            padding: 4px 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 13px;
+            width: 100%;
+            display: none;
+        }
+
+        label {
+            font-size: 14px;
+            color: #6b6b6b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <div class="control-group">
+                <label>预计人生长度:</label>
+                <select id="lifeExpectancy">
+                    <option value="70">70岁</option>
+                    <option value="75">75岁</option>
+                    <option value="80" selected>80岁</option>
+                    <option value="85">85岁</option>
+                    <option value="90">90岁</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>当前年龄:</label>
+                <input type="number" id="currentAge" value="25" min="0" max="100">
+            </div>
+        </div>
+
+        <div class="summary">
+            <span class="summary-text" id="progressInfo"></span>
+<button class="edit-button" id="editButton">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+    </svg>
+</button>
+<button class="edit-button" id="toggleEyeButton">
+    <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+    </svg>
+</button>
+
+            <input type="text" id="customMessage" class="editable" placeholder="输入自定义信息...">
+        </div>
+        
+        <div id="grid" class="grid"></div>
+    </div>
+
+    <script>
+        let customEndingMessage = "需要好好把握！";
+// 小眼睛图标切换逻辑扩展
+document.getElementById('toggleEyeButton').addEventListener('click', () => {
+    const eyeIcon = document.getElementById('eyeIcon');
+    const controls = document.querySelector('.controls');
+    const isOpen = eyeIcon.innerHTML.includes('circle'); // 检查当前状态是否为睁眼
+    if (isOpen) {
+        // 改为闭眼状态并隐藏 controls
+        eyeIcon.innerHTML = `
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <path d="M4.5 4.5l15 15"></path>
+        `;
+        controls.style.display = 'none';
+    } else {
+        // 改为睁眼状态并显示 controls
+        eyeIcon.innerHTML = `
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+        `;
+        controls.style.display = 'flex';
+    }
+});
+        function createGrid() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            
+            const lifeExpectancy = parseInt(document.getElementById('lifeExpectancy').value);
+            const currentAge = parseInt(document.getElementById('currentAge').value);
+            
+            for (let i = 0; i < lifeExpectancy; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                if (i < currentAge) {
+                    cell.classList.add('passed');
+                }
+if (i < currentAge) {
+    cell.classList.add('passed');
+
+    // 添加双击事件以调出颜色选择器
+    cell.addEventListener('dblclick', (e) => {
+        const colorPicker = document.createElement('input');
+        colorPicker.type = 'color';
+        colorPicker.style.position = 'absolute';
+        colorPicker.style.left = `${e.pageX}px`;
+        colorPicker.style.top = `${e.pageY}px`;
+        colorPicker.style.opacity = '0';
+        colorPicker.style.pointerEvents = 'none';
+
+        // 将颜色选择器添加到页面并触发点击
+        document.body.appendChild(colorPicker);
+        colorPicker.click();
+
+        // 当用户选择颜色时，更新所有已覆盖格子的颜色
+        colorPicker.addEventListener('input', (ev) => {
+            document.querySelectorAll('.cell.passed').forEach(passedCell => {
+                passedCell.style.backgroundColor = ev.target.value;
+            });
+        });
+
+        // 清理颜色选择器
+        colorPicker.addEventListener('blur', () => {
+            document.body.removeChild(colorPicker);
+        });
+    });
+}
+
+                grid.appendChild(cell);
+            }
+            
+            updateInfo(currentAge, lifeExpectancy);
+        }
+        
+        function updateInfo(currentAge, lifeExpectancy) {
+            const remaining = lifeExpectancy - currentAge;
+            const percentage = ((currentAge / lifeExpectancy) * 100).toFixed(1);
+            
+            const info = document.getElementById('progressInfo');
+            info.innerHTML = `
+                您已度过 ${currentAge} 年，占总生命的 ${percentage}%。<br>还有 ${remaining} 年${customEndingMessage}
+            `;
+        }
+
+        // 编辑功能
+        const editButton = document.getElementById('editButton');
+        const customMessageInput = document.getElementById('customMessage');
+        const summaryText = document.getElementById('progressInfo');
+
+        editButton.addEventListener('click', () => {
+            customMessageInput.style.display = 'block';
+            customMessageInput.value = customEndingMessage;
+            customMessageInput.focus();
+        });
+
+        customMessageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                customEndingMessage = customMessageInput.value;
+                customMessageInput.style.display = 'none';
+                createGrid(); // 更新显示
+            }
+        });
+
+        customMessageInput.addEventListener('blur', () => {
+            customEndingMessage = customMessageInput.value;
+            customMessageInput.style.display = 'none';
+            createGrid(); // 更新显示
+        });
+        
+        document.getElementById('lifeExpectancy').addEventListener('change', createGrid);
+        document.getElementById('currentAge').addEventListener('input', createGrid);
+        
+        // 初始创建
+        createGrid();
+    </script>
+</body>
+</html>
